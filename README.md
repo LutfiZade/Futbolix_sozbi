@@ -1,46 +1,51 @@
 # Futbolix
 
-Flutter Android uygulaması + Dart backend + Firebase. İki kişilik geliştirme için tek repo.
+Canlı skor, fikstür, puan durumu, spor haberleri, favoriler ve maç sohbeti sunacak Android uygulaması.
 
-**Durum:** Klasör ve çalışma düzeni hazırlığı. Henüz çalıştırılabilir Flutter/Dart uygulaması yok. UI/UX görselleri incelendikten sonra önce örnek verili ekranlar ve tıklamalar geliştirilecek.
+## Sistem mimarisi
 
-**Veri bütçesi:** Ücretli API aboneliği planlanmıyor. ESPN ve diğer ücretsiz kaynaklar için erişim, kapsam ve ticari kullanım doğrulaması gerekli. ESPN üretim kaynağı olarak kesinleşmedi. Ücretsiz veri, ücretsiz bulut işletimi garantisi değildir.
-
-## Başlangıç belgeleri
-
-- [Ana mimari ve T01–T42 görevleri](docs/FUTBOLIX-PROJE-PLANI.md)
-- [Ücretsiz veri ve GitHub hazırlığı](docs/FUTBOLIX-UCRETSIZ-VERI-VE-GITHUB-HAZIRLIK.md)
-- [Önceki API/RSS araştırması ve fiyat karşılaştırması](docs/FUTBOLIX-API-HIZ-VE-KAYNAK-KARSILASTIRMASI.md)
-- [Veri kaynaklarının ortak sözleşmesi](contracts/sports-provider.md)
-
-## Dosyalama
+| Bileşen | Görevi |
+|---|---|
+| **Flutter / Dart** | Mobil ekranlar, sayfa geçişleri ve kullanıcı etkileşimleri |
+| **Dart backend / Cloud Run** | Dış verileri ortak biçime dönüştürme, sohbet kuralları ve bildirim işlemleri |
+| **Firebase Authentication** | Kullanıcı girişi ve hesap yönetimi |
+| **Cloud Firestore** | Maç verileri, haber kartları, favoriler ve sohbet mesajları |
+| **Firebase Cloud Messaging** | Gol, maç başlangıcı ve bitişi gibi olayların bildirimleri |
+| **Cloud Scheduler** | Skor/haber yenileme ve temizlik işlerini zamanlama |
 
 ```text
-apps/
-  mobile/                 Flutter: ekranlar, router, tema, özellikler
-  backend/                Dart: kullanıcı API'si, veri işleri, adaptörler
-packages/domain_models/   Ortak saf Dart modelleri
-contracts/                Veri örnekleri, kaynak yetenekleri, API sözleşmeleri
-firebase/                 Rules, indeksler, emulator ayarları
-infra/                    Cloud Run, Scheduler, IAM, bütçe ayarları
-docs/                     Güncel plan ve kaynak araştırması
-.github/                  Görev ve PR şablonları; gelecekte CI
+Spor ve haber kaynakları → Dart backend → Firestore → Flutter
+                                  └→ FCM → Telefona bildirim
+Flutter → Firebase Auth → Kullanıcı girişi
+Flutter → Dart backend → Sohbet ve yetkili işlemler
 ```
 
-Alt klasörlerdeki README'ler sorumlulukları anlatır; uygulama kodu yerine geçmez. Ortak model üzerinden örnek veri/gerçek kaynak değiştirilecek; ekranlar ESPN veya başka bir sağlayıcıya doğrudan bağlanmayacak.
+- Dış kaynakları backend ortak olarak sorgular; her kullanıcı için ayrı istek gönderilmez.
+- Firestore'a yalnız değişen maç verileri yazılır. Haberlerde gerekli ve kullanımına izin verilen kart bilgileri saklanır.
+- Kaynak bağlantıları ayrı adaptörlerde tutulur; veri kaynağı değiştiğinde ekranları yeniden yazmak gerekmez. API/haber kaynağı seçimi ayrıca netleştirilecek.
+- Sohbet gerçek maç durumuyla açılır; maç bitince yazmaya kapanır. Mesajlar 24 saat okunabilir, ardından kullanıcı erişimi kapanır ve normal mesajlar temizlenir. Şikâyet kayıtları ayrı tutulur.
+- Sohbet maliyeti ayrı izlenir; bulut kurulumunda bütçe uyarıları açılır. API anahtarları mobil uygulamaya veya GitHub'a konmaz.
 
-## Çalışma
+## Klasör yapısı
 
-Repoda üç kalıcı dal kullanılır:
+```text
+apps/mobile/              Flutter uygulaması
+  lib/app/                Başlangıç, yönlendirme, tema
+  lib/core/               Ortak ayarlar ve hata yönetimi
+  lib/shared/widgets/     Ortak arayüz bileşenleri
+  lib/features/           auth, home, events, news, favorites, chat vb.
+    <özellik>/presentation/  Ekran ve ekran durumu
+    <özellik>/data/          Veri erişimi
+apps/backend/             Dart servisleri, kaynak adaptörleri ve işler
+packages/domain_models/   Mobil/backend ortak Dart modelleri
+contracts/                Veri sözleşmeleri ve örnekler
+firebase/                 Erişim kuralları ve indeksler
+infra/                    Cloud Run, Scheduler ve yetki ayarları
+.github/workflows/        Otomatik kontroller
+```
 
-| Dal | Kullanım |
-|---|---|
-| `main` | Ortak klasör yapısı ve incelenip birleştirilmiş güncel uygulama |
-| `seyyid` | Seyyid'in geliştirmeleri |
-| `kenan` | Kenan'ın geliştirmeleri |
+Bu, hedef yapıdır; şimdilik ana klasör iskeleti hazır. Flutter/Dart projeleri, alt klasörler ve otomatik kontroller henüz oluşturulmadı. UI/UX görselleri incelendikten sonra önce örnek verili ekranlar ve tıklamalar, ardından gerçek veri bağlantıları geliştirilecek.
 
-Herkes kendi dalında çalışır. Hazır değişiklikler `seyyid → main` veya `kenan → main` pull request'iyle birleştirilir; diğer geliştirici inceler. Birleştirmeden sonra ikiniz de `main` güncellemelerini kendi dalınıza alırsınız. Bu üç dal silinmez; PR'larda merge commit yöntemi kullanılır.
+## Çalışma dalları
 
-Görevleri GitHub Issues veya tercih ettiğiniz araçta takip edebilirsiniz; Notion zorunlu değildir. Proje üretildikten sonra Flutter/Dart sürümleri sabitlenecek ve gerçek analiz/test/derleme kontrolleri kurulacak. Şu an CI veya branch koruması aktif varsayılmamalı.
-
-Müşteri sözleşmeleri, gerçek kullanıcı verileri, API anahtarları ve servis hesabı dosyaları bu repoya eklenmez.
+**`main`** ortak ve onaylanmış sürüm, **`seyyid`** Seyyid'in, **`kenan`** Kenan'ın çalışma dalıdır. Hazır işler incelendikten sonra `main`e birleştirilir; iki geliştirici de güncel `main`i kendi dalına alır.
