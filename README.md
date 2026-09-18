@@ -97,11 +97,13 @@ Flutter uygulama kodunun kökü `lib/`, backend'in iç kodlarının yeri `lib/sr
 
 ## Şu an hazır olanlar
 
-Android destekli Flutter başlangıcı, Dart sunucu başlangıcı ve ortak Dart paketi oluşturuldu. Mobilde yalnız geçici **Futbolix** ekranı, backend'de yalnız `GET /healthz` kontrolü bulunur. Boş klasörlerdeki `.gitkeep`, klasörün GitHub'da görünmesini sağlar; özelliğin tamamlandığı anlamına gelmez.
+Android destekli Flutter uygulaması, Dart sunucu başlangıcı ve ortak Dart paketi oluşturuldu. Mobilde gönderilen UI/UX'e göre **Ana Sayfa, Maçlar, Haberler, Takımlar ve Daha Fazla** ekranları bulunur. Alt menü geçişleri, spor/lig/haber filtreleri, Türkçe takım araması, takım takibi, maç favorileri ve ayrıntı pencereleri örnek verilerle çalışır. Favoriler sekmeler arasında paylaşılır; bildirim tercihleri ve okunan haber sayısı aynı oturumda güncellenir. Android geri tuşu ana sekmeye döner.
 
-UI/UX ekranları, yönlendirme, Firebase/API bağlantıları, iş kuralları, test senaryoları, Docker/Cloud Run kurulumu ve otomatik kontroller sonraki işlerdir. Varlık klasörleri hazırdır; gerçek görsel/fontlar geldiğinde `pubspec.yaml` içinde tanımlanacak. API anahtarı veya bulut hesabı bu başlangıca bağlanmadı.
+Bu bir **arayüz ön izlemesidir**: skorlar, haberler, profil ve PRO rozeti örnektir. Hesap/abonelik, gerçek bildirim, canlı sohbet ve dış veri servisleri bağlı değildir. Seçimler uygulama yeniden başlatıldığında sıfırlanır. Tema/dil pencereleri mevcut koyu/Türkçe görünümünü gösterir; başka tema veya dil henüz eklenmedi. Backend yalnız `GET /healthz` yanıtı verir.
 
-UI/UX'i beklemeden ortak iskeleti hazırlayabiliriz. Görseller geldiğinde önce örnek verili ekranlar ve tıklamalar, ardından gerçek veri bağlantıları geliştirilecek.
+Ön izleme kayıtları `lib/core/demo/demo_data.dart`, ortak oturum durumu `lib/app/demo_store.dart`, beş sekmenin bağlantısı `lib/app/app_shell.dart` içindedir. Gerçek veri bağlantılarında özelliklerin `data` katmanı ve ortak modeller kullanılacak. Boş klasörlerdeki `.gitkeep`, klasörün GitHub'da görünmesini sağlar; özelliğin tamamlandığı anlamına gelmez.
+
+Logo/avatar örnekleri kullanıcı tarafından sağlanan referansların küçük bölgelerinden uygulama içinde gösterilir; ekranlar gerçek Flutter bileşenleridir. Kaynak görseller `assets/reference` altındadır. Bazı takımlar için harfli yer tutucu vardır; yüksek çözünürlüklü izinli logolar gerçek veri aşamasında bağlanacak. Firebase/API, kalıcı depolama, Docker/Cloud Run ve otomatik kontroller sonraki işlerdir.
 
 ## Yerelde açma ve çalıştırma
 
@@ -113,6 +115,16 @@ Mobil için `apps/mobile` terminalinde:
 flutter pub get
 flutter run
 ```
+
+Arayüz kontrolleri yine `apps/mobile` terminalinde:
+
+```sh
+flutter analyze
+flutter test
+flutter build apk --debug
+```
+
+`test/preview_flows_test.dart`; beş sekmeyi dar ekranda, takip/arama/favori akışlarını, haber detayını, bildirim tercihlerini ve geri tuşunu kontrol eder. Emülatör için debug APK çıktısı `build/app/outputs/flutter-apk/app-debug.apk` olur.
 
 Backend için `apps/backend` terminalinde:
 
