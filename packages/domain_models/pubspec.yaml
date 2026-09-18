@@ -1,0 +1,7 @@
+name: futbolix_domain_models
+description: Shared pure Dart models for Futbolix mobile and backend.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.11.1

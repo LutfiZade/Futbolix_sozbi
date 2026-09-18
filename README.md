@@ -42,28 +42,86 @@ Flutter → Dart backend → Sohbet ve yetkili işlemler
 
 Dakika altı sorgulama için Cloud Scheduler tek başına yeterli değildir; Cloud Run'da uygun çalışan bir işleyici veya sağlayıcının desteklediği canlı akış gerekir. Bu çalışma biçimi ve bulut maliyeti gerçek maç testinden sonra belirlenir. Ücretli kaynağa otomatik geçilmez.
 
-## Klasör yapısı
+## Flutter ve Dart klasör yapısı
 
 ```text
-apps/mobile/              Flutter uygulaması
-  lib/app/                Başlangıç, yönlendirme, tema
-  lib/core/               Ortak ayarlar ve hata yönetimi
-  lib/shared/widgets/     Ortak arayüz bileşenleri
-  lib/features/           auth, home, events, news, favorites, chat vb.
-    <özellik>/presentation/  Ekran ve ekran durumu
-    <özellik>/data/          Veri erişimi
-apps/backend/             Dart servisleri, kaynak adaptörleri ve işler
-  lib/src/integrations/    Spor/haber kaynaklarına bağlantılar
-  lib/src/modules/         Ortak veri dönüşümü, kaynak seçimi ve iş kuralları
-  lib/src/jobs/            Veri yenileme, bildirim ve temizlik
-packages/domain_models/   Mobil/backend ortak Dart modelleri
-contracts/                Veri sözleşmeleri ve örnekler
-firebase/                 Erişim kuralları ve indeksler
-infra/                    Cloud Run, Scheduler ve yetki ayarları
-.github/workflows/        Otomatik kontroller
+apps/
+  mobile/                           Flutter Android uygulaması
+    pubspec.yaml                    Mobil bağımlılıkları ve varlık tanımları
+    android/                        Android Studio, Gradle ve yerel Android dosyaları
+    assets/images, icons, fonts/    Görsel, ikon ve yazı tipi klasörleri
+    lib/
+      main.dart                     Mobil giriş noktası
+      app/
+        bootstrap.dart              Uygulamayı başlatma
+        futbolix_app.dart           MaterialApp ve uygulama kabuğu
+        router/                     Ekran geçişleri
+        theme/                      Tema
+      core/                         config, errors, time, telemetry
+      shared/widgets/               Gerçekten ortak arayüz bileşenleri
+      features/
+        home/presentation/          Başlangıç ekranı
+        <özellik>/presentation/     Ekran, widget ve controller/viewmodel
+        <özellik>/data/             Repository ve veri bağlantısı
+    test/                           Birim ve widget testleri
+    integration_test/               Uygulama akışı testleri
+  backend/                          Saf Dart sunucu uygulaması
+    pubspec.yaml                    Backend bağımlılıkları
+    bin/server.dart                 Sunucu giriş noktası
+    lib/src/
+      http/                         İstekler; ileride kimlik ve erişim doğrulama
+      modules/                      sports, news, chat, moderation, users
+      integrations/
+        sports/                     Spor kaynağı adaptörleri
+        news/                       RSS/Atom ve haber servisi adaptörleri
+        firebase/                   Sunucunun Firebase bağlantıları
+      repositories/                 Veri okuma/yazma
+      jobs/                         Güncelleme, bildirim ve temizlik
+    test/                           Backend testleri
+packages/domain_models/
+  pubspec.yaml                      Ortak saf Dart paketi
+  lib/domain_models.dart            Paylaşılan modellerin dışa açılan girişi
+  lib/src/                          Ortak modellerin tanımları
+  test/                             Model testleri
+contracts/                          Veri sözleşmeleri ve örnekler
+firebase/                           Erişim kuralları ve indeksler
+infra/                              Cloud Run, Scheduler ve yetki ayarları
+.github/workflows/                  Otomatik kontroller
 ```
 
-Bu, hedef yapıdır; şimdilik ana klasör iskeleti hazır. Flutter/Dart projeleri, alt klasörler ve otomatik kontroller henüz oluşturulmadı. UI/UX görselleri incelendikten sonra önce örnek verili ekranlar ve tıklamalar, ardından gerçek veri bağlantıları geliştirilecek.
+Mobil özellik klasörleri: `auth`, `home`, `sports`, `competitions`, `events`, `participants`, `favorites`, `news`, `notifications`, `chat`, `moderation`, `settings`. Her birinde `presentation` ve `data` ayrımı bulunur.
+
+**Dosyayı nereye koyacağız?** Mobil ekranlar ve durum yönetimi `presentation`, verinin nereden alındığı `data` içindedir. Dış spor/haber servisleriyle yalnız backend'in `integrations` bölümü konuşur. Sunucu iş kuralları `modules`, tekrarlanan işler `jobs` içindedir. İki uygulamanın gerçekten paylaştığı modeller `domain_models` paketinde tutulur; bu paket Flutter'a veya Firebase'e bağımlı olmaz. Mobil ile backend birbirinin kaynak kodunu içe aktarmaz.
+
+Flutter uygulama kodunun kökü `lib/`, backend'in iç kodlarının yeri `lib/src/` olarak seçildi. Ortak paketin dışarı açacağı modeller `domain_models.dart` üzerinden sunulacak. Her projenin kendi `pubspec.yaml` dosyası vardır; mobil ve backend ortak pakete yerel `path` bağımlılığıyla bağlanır.
+
+## Şu an hazır olanlar
+
+Android destekli Flutter başlangıcı, Dart sunucu başlangıcı ve ortak Dart paketi oluşturuldu. Mobilde yalnız geçici **Futbolix** ekranı, backend'de yalnız `GET /healthz` kontrolü bulunur. Boş klasörlerdeki `.gitkeep`, klasörün GitHub'da görünmesini sağlar; özelliğin tamamlandığı anlamına gelmez.
+
+UI/UX ekranları, yönlendirme, Firebase/API bağlantıları, iş kuralları, test senaryoları, Docker/Cloud Run kurulumu ve otomatik kontroller sonraki işlerdir. Varlık klasörleri hazırdır; gerçek görsel/fontlar geldiğinde `pubspec.yaml` içinde tanımlanacak. API anahtarı veya bulut hesabı bu başlangıca bağlanmadı.
+
+UI/UX'i beklemeden ortak iskeleti hazırlayabiliriz. Görseller geldiğinde önce örnek verili ekranlar ve tıklamalar, ardından gerçek veri bağlantıları geliştirilecek.
+
+## Yerelde açma ve çalıştırma
+
+Başlangıç **Flutter 3.41.4 / Dart 3.11.1** ile oluşturuldu. Android Studio'da Flutter/Dart desteğiyle `apps/mobile` klasörünü açın; emülatörü Device Manager'dan seçin. `android/` klasörü yalnız yerel Android/Gradle işlemleri içindir.
+
+Mobil için `apps/mobile` terminalinde:
+
+```sh
+flutter pub get
+flutter run
+```
+
+Backend için `apps/backend` terminalinde:
+
+```sh
+dart pub get
+dart run bin/server.dart
+```
+
+Backend yerelde `http://127.0.0.1:8080/healthz` adresinde çalışır; `HOST` ve `PORT` ortam değişkenleriyle ayarlanabilir. İki uygulama bu aşamada birbirine bağlı değildir. Android uygulama kimliği şimdilik `com.example.futbolix_mobile` yer tutucusudur; Firebase/Google Play kurulumundan önce müşteri adına ait kalıcı kimlik ve yayın imzası belirlenecek.
 
 ## Çalışma dalları
 

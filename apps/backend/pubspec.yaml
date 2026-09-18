@@ -1,0 +1,11 @@
+name: futbolix_backend
+description: Futbolix Dart backend.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  futbolix_domain_models:
+    path: ../../packages/domain_models
